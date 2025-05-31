@@ -18,18 +18,11 @@ func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 	})
 }
 
-func (cfg *apiConfig) handlerMetricsInc(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handlerMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	currentHits := cfg.fileserverHits.Load()
 	w.Write([]byte(fmt.Sprintf("Hits: %d", currentHits)))
-}
-
-func (cfg *apiConfig) handlerMetricsReset(w http.ResponseWriter, r *http.Request) {
-	cfg.fileserverHits.Store(0)
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("File server hits reset"))
 }
 
 func main() {
@@ -42,8 +35,8 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle("/app/", http.StripPrefix("/app", apiConfig.middlewareMetricsInc(http.FileServer(http.Dir(filepathRoot)))))
 	mux.HandleFunc("/healthz", handlerReadiness)
-	mux.HandleFunc("/metrics", apiConfig.handlerMetricsInc)
-	mux.HandleFunc("/reset", apiConfig.handlerMetricsReset)
+	mux.HandleFunc("/metrics", apiConfig.handlerMetrics)
+	mux.HandleFunc("/reset", apiConfig.handlerReset)
 
 	server := http.Server{
 		Handler: mux,
@@ -52,10 +45,4 @@ func main() {
 
 	log.Printf("Serving files from %s on port: %s\n", filepathRoot, port)
 	log.Fatal(server.ListenAndServe())
-}
-
-func handlerReadiness(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(http.StatusText(http.StatusOK)))
 }
