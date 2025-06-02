@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/bdbrwr/bootdev_http_server/internal/auth"
+	"github.com/bdbrwr/bootdev_http_server/internal/database"
 	"github.com/google/uuid"
 )
 
@@ -13,11 +15,13 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Email     string    `json:"email"`
+	Password  string    `json:"password"`
 }
 
 func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		Email string `json:"email"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
 
 	type response struct {
@@ -32,7 +36,15 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	user, err := cfg.db.CreateUser(r.Context(), params.Email)
+	hashed_password, err := auth.HashPassword(params.Password)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't create user", err)
+	}
+
+	user, err := cfg.db.CreateUser(r.Context(), database.CreateUserParams{
+		Email:    params.Email,
+		Password: hashed_password,
+	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create user", err)
 		return
