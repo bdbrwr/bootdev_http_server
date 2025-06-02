@@ -7,7 +7,7 @@ import (
 	"github.com/bdbrwr/bootdev_http_server/internal/auth"
 )
 
-func (cfg *apiConfig) handlerUsersLogin(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -27,22 +27,20 @@ func (cfg *apiConfig) handlerUsersLogin(w http.ResponseWriter, r *http.Request) 
 
 	user, err := cfg.db.GetUserByEmail(r.Context(), params.Email)
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "User does not exist", err)
+		respondWithError(w, http.StatusUnauthorized, "Incorrect email or password", err)
 		return
 	}
 
 	err = auth.CheckPasswordHash(user.Password, params.Password)
 	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "Wrong password", err)
+		respondWithError(w, http.StatusUnauthorized, "Incorrect email or password", err)
 		return
 	}
 
 	respondWithJSON(w, http.StatusOK, response{
 		User: User{
-			ID:        user.ID,
-			CreatedAt: user.CreatedAt,
-			UpdatedAt: user.UpdatedAt,
-			Email:     user.Email,
+			ID:    user.ID,
+			Email: user.Email,
 		},
 	})
 }
