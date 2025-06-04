@@ -9,22 +9,22 @@ import (
 )
 
 func (cfg *apiConfig) handlerWebhook(w http.ResponseWriter, r *http.Request) {
-	apiKey, err := auth.GetAPIKey(r.Header)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "Incorrect API Key", err)
-		return
-	}
-
-	if apiKey != cfg.polkaKey {
-		respondWithError(w, http.StatusUnauthorized, "Incorrect API Key", err)
-		return
-	}
-
 	type parameters struct {
 		Event string `json:"event"`
 		Data  struct {
 			UserID uuid.UUID `json:"user_id"`
 		} `json:"data"`
+	}
+
+	apiKey, err := auth.GetAPIKey(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Couldn't find api key", err)
+		return
+	}
+
+	if apiKey != cfg.polkaKey {
+		respondWithError(w, http.StatusUnauthorized, "API key is invalid", err)
+		return
 	}
 
 	params := parameters{}
