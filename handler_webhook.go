@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (cfg *apiConfig) handlerUserUpgradeRed(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handlerWebhook(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Event string `json:"event"`
 		Data  struct {
@@ -24,7 +24,7 @@ func (cfg *apiConfig) handlerUserUpgradeRed(w http.ResponseWriter, r *http.Reque
 	}
 
 	if params.Event != "user.upgraded" {
-		respondWithJSON(w, http.StatusNoContent, nil)
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
@@ -34,6 +34,6 @@ func (cfg *apiConfig) handlerUserUpgradeRed(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	respondWithJSON(w, http.StatusNoContent, nil)
+	w.WriteHeader(http.StatusNoContent)
 
 }
