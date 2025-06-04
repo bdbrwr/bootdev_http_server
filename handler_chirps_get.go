@@ -1,8 +1,10 @@
 package main
 
 import (
+	"database/sql"
 	"net/http"
 
+	"github.com/bdbrwr/bootdev_http_server/internal/database"
 	"github.com/google/uuid"
 )
 
@@ -44,7 +46,18 @@ func (cfg *apiConfig) handlerChirpsRetrieve(w http.ResponseWriter, r *http.Reque
 		authorID.Valid = true
 	}
 
-	dbChirps, err := cfg.db.GetChirps(r.Context(), authorID)
+	var sort sql.NullString
+	if r.URL.Query().Get("sort") == "desc" {
+		sort.String = "desc"
+		sort.Valid = true
+	}
+
+	getChirpsParams := database.GetChirpsParams{
+		AuthorID: authorID,
+		Sort:     sort,
+	}
+
+	dbChirps, err := cfg.db.GetChirps(r.Context(), getChirpsParams)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't retrieve chirps", err)
 		return
