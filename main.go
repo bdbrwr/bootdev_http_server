@@ -17,6 +17,7 @@ type apiConfig struct {
 	db             *database.Queries
 	platform       string
 	jwtSecret      string
+	polkaKey       string
 }
 
 func main() {
@@ -41,11 +42,17 @@ func main() {
 		log.Fatal("JWT_SECRET environ variable is not set")
 	}
 
+	polkaKey := os.Getenv("POLKA_KEY")
+	if jwtSecret == "" {
+		log.Fatal("POLKA_KEY environ variable is not set")
+	}
+
 	apiCfg := apiConfig{
 		fileserverHits: atomic.Int32{},
 		db:             dbQueries,
 		platform:       platform,
 		jwtSecret:      jwtSecret,
+		polkaKey:       polkaKey,
 	}
 
 	mux := http.NewServeMux()
